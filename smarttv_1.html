@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Ma Smart TV</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  html, body { margin: 0; padding: 0; height: 100%; background: #0b1220; color: #fff; font-family: Arial, Helvetica, sans-serif; overflow: hidden; }
+  .ecran { display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0; }
+  .visible { display: block; }
+
+  /* ---- Ecran 1 : telechargement ---- */
+  #accueil { text-align: center; }
+  #accueil .centre { position: absolute; top: 50%; left: 0; right: 0; margin-top: -120px; }
+  #accueil h1 { font-size: 48px; margin: 0 0 40px 0; }
+  #btn-dl { font-size: 44px; font-weight: bold; color: #fff; background: #1e88e5; border: 0; padding: 30px 90px; border-radius: 16px; cursor: pointer; }
+  #btn-dl:focus, #btn-dl:hover { background: #42a5f5; outline: 4px solid #fff; }
+  #barre-fond { width: 600px; height: 24px; background: #22314d; border-radius: 12px; margin: 0 auto; display: none; overflow: hidden; }
+  #barre { width: 0%; height: 100%; background: #43d17a; }
+  #etat { font-size: 28px; color: #9fb3d1; margin-top: 20px; height: 34px; }
+
+  /* ---- Ecran 2 : faux ecran Smart TV ---- */
+  #tv { background: #0b1220; }
+  #haut { padding: 30px 60px; overflow: hidden; }
+  #logo { float: left; font-size: 34px; font-weight: bold; color: #5ab0ff; }
+  #horloge { float: right; font-size: 34px; }
+  #titre { font-size: 30px; color: #9fb3d1; padding: 20px 60px 10px 60px; }
+  #grille { padding: 0 50px; }
+  a.tuile { display: inline-block; width: 280px; height: 160px; margin: 10px; border-radius: 14px; color: #fff; text-decoration: none; font-size: 34px; font-weight: bold; text-align: center; line-height: 160px; vertical-align: top; border: 4px solid transparent; }
+  a.tuile:focus, a.tuile:hover { border-color: #fff; outline: none; }
+  #bas { position: absolute; bottom: 20px; left: 60px; right: 60px; font-size: 20px; color: #6b7f9e; }
+  #btn-retirer { font-size: 20px; color: #9fb3d1; background: #16223a; border: 2px solid #22314d; padding: 10px 24px; border-radius: 8px; cursor: pointer; margin-right: 20px; }
+  #btn-retirer:focus, #btn-retirer:hover { border-color: #fff; outline: none; }
+</style>
+</head>
+<body>
+
+<div id="accueil" class="ecran visible">
+  <div class="centre">
+    <h1>Ma Smart TV</h1>
+    <button id="btn-dl" type="button">T&eacute;l&eacute;charger</button>
+    <div id="barre-fond"><div id="barre"></div></div>
+    <div id="etat"></div>
+  </div>
+</div>
+
+<div id="tv" class="ecran">
+  <div id="haut">
+    <div id="logo">Ma Smart TV</div>
+    <div id="horloge">--:--</div>
+  </div>
+  <div id="titre">Applications</div>
+  <div id="grille">
+    <a class="tuile" href="https://www.youtube.com/tv" style="background:#c4302b">YouTube</a>
+    <a class="tuile" href="https://www.netflix.com" style="background:#221f1f">Netflix</a>
+    <a class="tuile" href="https://www.disneyplus.com" style="background:#113ccf">Disney+</a>
+    <a class="tuile" href="https://www.primevideo.com" style="background:#0f79af">Prime Video</a>
+    <a class="tuile" href="https://www.france.tv" style="background:#6a1b9a">France.tv</a>
+    <a class="tuile" href="https://www.tf1.fr" style="background:#2e7d32">MyTF1</a>
+    <a class="tuile" href="https://www.arte.tv" style="background:#e65100">Arte</a>
+    <a class="tuile" href="https://www.twitch.tv" style="background:#6441a5">Twitch</a>
+  </div>
+  <div id="bas">
+    <button id="btn-retirer" type="button">Retirer l'application</button>
+    Fl&egrave;ches de la t&eacute;l&eacute;commande pour naviguer, OK pour ouvrir.
+  </div>
+</div>
+
+<script>
+// Code simple (ES5) pour les vieux navigateurs de TV
+function $(id) { return document.getElementById(id); }
+function deux(n) { return n < 10 ? "0" + n : "" + n; }
+
+function afficher(id) {
+  $("accueil").className = "ecran" + (id === "accueil" ? " visible" : "");
+  $("tv").className = "ecran" + (id === "tv" ? " visible" : "");
+}
+
+function lireEtat() { try { return window.localStorage.getItem("smarttv") === "1"; } catch (e) { return false; } }
+function ecrireEtat(v) { try { if (v) { window.localStorage.setItem("smarttv", "1"); } else { window.localStorage.removeItem("smarttv"); } } catch (e) {} }
+
+function horloge() {
+  var d = new Date();
+  $("horloge").innerHTML = deux(d.getHours()) + ":" + deux(d.getMinutes());
+}
+
+function lancerTV() {
+  afficher("tv");
+  horloge();
+  var tuiles = document.getElementsByTagName("a");
+  if (tuiles.length > 0) { tuiles[0].focus(); }
+}
+
+function telecharger() {
+  var btn = $("btn-dl");
+  btn.style.display = "none";
+  $("barre-fond").style.display = "block";
+  var p = 0;
+  var t = setInterval(function () {
+    p += 4;
+    if (p > 100) { p = 100; }
+    $("barre").style.width = p + "%";
+    $("etat").innerHTML = p < 70 ? "T&eacute;l&eacute;chargement... " + p + "%" : (p < 100 ? "Installation... " + p + "%" : "Termin&eacute; !");
+    if (p >= 100) {
+      clearInterval(t);
+      ecrireEtat(true);
+      setTimeout(lancerTV, 700);
+    }
+  }, 120);
+}
+
+function retirer() {
+  ecrireEtat(false);
+  $("barre").style.width = "0%";
+  $("barre-fond").style.display = "none";
+  $("etat").innerHTML = "";
+  $("btn-dl").style.display = "inline-block";
+  afficher("accueil");
+  $("btn-dl").focus();
+}
+
+// Navigation fleches (telecommande) entre les tuiles et le bouton Retirer
+function navigation(e) {
+  e = e || window.event;
+  var k = e.keyCode;
+  if (k < 37 || k > 40) { return; }
+  var els = [];
+  var a = document.getElementsByTagName("a");
+  for (var i = 0; i < a.length; i++) { els.push(a[i]); }
+  els.push($("btn-retirer"));
+  var cur = -1;
+  for (var j = 0; j < els.length; j++) { if (els[j] === document.activeElement) { cur = j; } }
+  if (cur === -1) { return; }
+  var n = cur;
+  if (k === 37) { n = cur - 1; }
+  if (k === 39) { n = cur + 1; }
+  if (k === 38) { n = cur - 4; }
+  if (k === 40) { n = cur + 4; if (n >= els.length) { n = els.length - 1; } }
+  if (n < 0) { n = 0; }
+  if (n >= els.length) { n = els.length - 1; }
+  els[n].focus();
+  if (e.preventDefault) { e.preventDefault(); }
+}
+
+$("btn-dl").onclick = telecharger;
+$("btn-retirer").onclick = retirer;
+document.onkeydown = navigation;
+setInterval(horloge, 1000);
+
+if (lireEtat()) { lancerTV(); } else { $("btn-dl").focus(); }
+</script>
+</body>
+</html>

@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Veille TV</title>
+<style>
+  html, body { margin: 0; padding: 0; height: 100%; background: #0b1220; color: #fff; font-family: Arial, Helvetica, sans-serif; }
+  #page { padding: 40px 60px; }
+  #heure { font-size: 120px; font-weight: bold; line-height: 1; }
+  #date { font-size: 36px; color: #9fb3d1; margin-top: 10px; }
+  h2 { font-size: 32px; color: #5ab0ff; margin: 40px 0 15px 0; border-bottom: 2px solid #22314d; padding-bottom: 10px; }
+  ul { list-style: none; margin: 0; padding: 0; }
+  li { font-size: 30px; padding: 12px 0; border-bottom: 1px solid #1a263d; }
+  #maj { font-size: 20px; color: #6b7f9e; margin-top: 20px; }
+</style>
+</head>
+<body>
+<div id="page">
+  <div id="heure">--:--</div>
+  <div id="date"></div>
+  <h2>Actualit&eacute;s</h2>
+  <ul id="actus"><li>Chargement...</li></ul>
+  <div id="maj"></div>
+</div>
+
+<script>
+// Code volontairement simple (ES5) pour les vieux navigateurs de TV
+var JOURS = ["dimanche","lundi","mardi","mercredi","jeudi","vendredi","samedi"];
+var MOIS = ["janvier","f\u00e9vrier","mars","avril","mai","juin","juillet","ao\u00fbt","septembre","octobre","novembre","d\u00e9cembre"];
+
+function deuxChiffres(n) { return n < 10 ? "0" + n : "" + n; }
+
+function majHorloge() {
+  var d = new Date();
+  document.getElementById("heure").innerHTML = deuxChiffres(d.getHours()) + ":" + deuxChiffres(d.getMinutes());
+  document.getElementById("date").innerHTML = JOURS[d.getDay()] + " " + d.getDate() + " " + MOIS[d.getMonth()] + " " + d.getFullYear();
+}
+
+function majActus() {
+  var xhr = new XMLHttpRequest();
+  xhr.open("GET", "/news?t=" + new Date().getTime(), true);
+  xhr.onreadystatechange = function () {
+    if (xhr.readyState !== 4) { return; }
+    var liste = document.getElementById("actus");
+    if (xhr.status === 200) {
+      var titres = eval("(" + xhr.responseText + ")");
+      var html = "";
+      for (var i = 0; i < titres.length; i++) {
+        html += "<li>" + titres[i] + "</li>";
+      }
+      liste.innerHTML = html;
+      var d = new Date();
+      document.getElementById("maj").innerHTML = "Mis &agrave; jour &agrave; " + deuxChiffres(d.getHours()) + ":" + deuxChiffres(d.getMinutes());
+    } else {
+      liste.innerHTML = "<li>Impossible de charger les actus</li>";
+    }
+  };
+  xhr.send(null);
+}
+
+majHorloge();
+majActus();
+setInterval(majHorloge, 1000);
+setInterval(majActus, 300000); // toutes les 5 minutes
+</script>
+</body>
+</html>
